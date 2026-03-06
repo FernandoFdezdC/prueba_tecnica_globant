@@ -1,0 +1,11 @@
+services:
+  dev:
+    build:
+      context: .  # Contexto en el directorio raíz
+      dockerfile: Dockerfile.dev
+    volumes:
+      # Use read only so that no malicious python packages code can be executed in our host system
+      - ./src:/code/app:ro
+      - ./tests:/code/tests:ro
+    ports:
+      - "8000:8000"
