@@ -16,3 +16,9 @@ app.add_middleware(
 def health():
     return {"message": "Status OK."}
 
+
+# Routers
+
+from routers import db_migration
+
+app.include_router(db_migration.router)

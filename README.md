@@ -381,6 +381,30 @@ sudo systemctl reload apache2
 With this, the application should now be running in production.
 
 
+## Use API
+
+In order to use the API, take the following example that takes the data stored in CSV files in the folder `data` and stores it in the MySQL database:
+
+```powershell
+curl -X POST http://localhost:8000/departments -H "accept: application/json" -F "file=@data\departments.csv"
+```
+```powershell
+curl -X POST http://localhost:8000/jobs -H "accept: application/json" -F "file=@data\jobs.csv"
+```
+```powershell
+curl -X POST http://localhost:8000/employees -H "accept: application/json" -F "file=@data\hired_employees.csv"
+```
+
+The following endpoints retrieve basic metrics about the data stored:
+
+```powershell
+curl -X GET http://localhost:8000/metrics/hires-by-quarter -H "accept: application/json"
+```
+```powershell
+curl -X GET http://localhost:8000/metrics/departments-above-mean -H "accept: application/json"
+```
+
+
 ## Code explanation
 
 We do bulk data loading using the details given in https://dev.mysql.com/doc/refman/8.4/en/optimizing-innodb-bulk-data-loading.html, as the tables we use in our MySQL database are of InnoDB type (we use InnoDB because it is ACID compliant).
