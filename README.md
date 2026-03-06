@@ -206,3 +206,7 @@ resources:
 - Enable readiness and liveness probes
 - Use HTTPS via Ingress + Cert-Manager
 - Use Horizontal Pod Autoscaler (HPA)
+
+## Code explanation
+
+We do bulk data loading using the details given in https://dev.mysql.com/doc/refman/8.4/en/optimizing-innodb-bulk-data-loading.html, as the tables we use in our MySQL database are of InnoDB type (we use InnoDB because it is ACID compliant).

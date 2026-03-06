@@ -1,0 +1,6 @@
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY 'root';
+GRANT ALL PRIVILEGES ON db_migration_ddbb.* TO 'root'@'%';
+FLUSH PRIVILEGES;
+
+DROP USER 'root'@'localhost';
+FLUSH PRIVILEGES;
