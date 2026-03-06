@@ -1,0 +1,17 @@
+**/__pycache__/*
+**/.ipynb_checkpoints/*
+
+*.csv
+
+cache/
+notebooks/
+*.parquet
+*.pkl
+*.ipynb
+logs/
+secrets/
+liveenv
+*.env
+*.env.local
+*.env.demo
+*.log
