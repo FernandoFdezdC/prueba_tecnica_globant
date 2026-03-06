@@ -207,6 +207,180 @@ resources:
 - Use HTTPS via Ingress + Cert-Manager
 - Use Horizontal Pod Autoscaler (HPA)
 
+## Local development using uv
+
+This sections shows how to initiate the API with local development using `uv`.
+
+To install the minimum requirements and tools, run the following commands:
+
+```bash
+# Install system dependencies
+sudo apt-get update
+sudo apt-get install nodejs npm python3 python3-pip
+```
+
+Create a virtual environment and install dependencies using `uv`:
+```bash
+cd api-bi
+
+# Install uv (if not already installed)
+pip install uv
+
+# Create a virtual environment
+uv venv
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Install project dependencies
+uv pip install -r requirements.txt
+```
+
+To add a new library, use:
+```bash
+uv pip install <library-name>
+```
+
+
+### Use
+
+In order to initiate the API, execute:
+
+> uvicorn main:app --reload
+
+The application starts at [http://localhost:8000](http://localhost:8000).
+
+🔹 1. Interactive Documentation (Swagger UI)
+If you open the following URL in your browser [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs), you will see the Swagger UI interface, where you can directly test your endpoints.
+
+🔹 2. Alternative Documentation (ReDoc)
+You can also access another version at [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc).
+
+
+
+## Production Deployment using uv
+
+To deploy the application to production, you must configure a WSGI server such as Gunicorn and a web server such as Nginx or Apache.
+
+You will need to install Gunicorn and the production dependencies:
+
+```bash
+pip install gunicorn
+pip install -r requirements.txt
+```
+
+### Gunicorn Configuration
+
+You can test that it works correctly with the following command:
+
+```bash
+# main is the name of the main application file without the .py extension
+gunicorn --bind 0.0.0.0:8000 main:app -k uvicorn.workers.UvicornWorker
+```
+
+Next, create a Gunicorn configuration file in the project root called gunicorn_config.py with the following content:
+
+```python
+import os
+import multiprocessing
+from dotenv import load_dotenv
+
+dotenv_path = os.path.join('/ABSOLUTE_PATH_TO_THE_PROJECT/api-bi', '.env')
+load_dotenv(dotenv_path)
+
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_class = 'uvicorn.workers.UvicornWorker'
+
+bind = [os.getenv('DB_MIGRATION_API_HOST', '127.0.0.1') + ':'+ os.getenv('DB_MIGRATION_API_PORT', '8000')]
+limit_request_field_size = 32760
+umask = 0o007
+reload = True
+
+# Logging options
+loglevel = 'debug'
+accesslog = '/PATH_FOR_YOUR_LOGS/access_log'
+errorlog = '/PATH_FOR_YOUR_LOGS/error_log'
+```
+
+Then, to verify that the configuration file is correctly defined, run:
+
+```bash
+# main is the name of the main application file without the .py extension
+gunicorn -c /ABSOLUTE_PATH_TO_THE_CONFIG_FILE/gunicorn_config.py main:app 
+```
+
+
+### systemd Configuration
+If you want to configure Gunicorn to run as a system service, first create a service file at `systemd/system/db-migration-api.service` with the following content:
+
+```bash
+[Unit]
+Description=Gunicorn instance to serve api-bi
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/ABSOLUTE_PATH_TO_THE_PROJECT/api-bi
+Environment="PATH=/ABSOLUTE_PATH_TO_THE_PROJECT/api-bi/myvenv/bin"
+ExecStart=/ABSOLUTE_PATH_TO_THE_PROJECT/api-bi/myvenv/bin/gunicorn --config /ABSOLUTE_PATH_TO_THE_PROJECT/api-bi/gunicorn_config.py wsgi:app
+
+[Install]
+WantedBy=multi-user.target
+```
+
+To start and enable the service:
+```bash
+sudo systemctl start api-bi
+sudo systemctl enable api-bi
+```
+
+### Apache Configuration
+
+Now configure the Apache server. First, install Apache and the Apache WSGI module:
+
+```bash
+sudo apt-get install apache2 libapache2-mod-wsgi-py3
+sudo a2enmod wsgi
+```
+Configure the Apache proxy configuration file at `/etc/apache2/sites-available/api-bi.conf` with the following content:
+
+```bash
+<VirtualHost *:80>
+    ServerAdmin web@example.com
+    ServerName example.com
+    ServerAlias www.example.com 
+
+    ProxyRequests off
+    <Proxy *>
+        Order deny,allow
+        Allow from all
+    </Proxy>
+
+    <Location />
+        ProxyPass http://localhost:YOUR_APP_PORT/
+        ProxyPassReverse http://localhost:YOUR_APP_PORT/
+    </Location>
+    
+    ErrorLog ${APACHE_LOG_DIR}/api-bi-error.log
+    CustomLog ${APACHE_LOG_DIR}/api-bi-access.log combined
+    
+</VirtualHost>
+```
+
+To enable the site and reload the Apache configuration:
+
+```bash
+sudo a2ensite api-bi
+# O creando un enlace simbólico
+sudo ln -s /etc/apache2/sites-available/api-bi.conf /etc/apache2/sites-enabled/api-bi.conf
+# Recargar la configuración
+sudo systemctl reload apache2
+```
+
+With this, the application should now be running in production.
+
+
 ## Code explanation
 
 We do bulk data loading using the details given in https://dev.mysql.com/doc/refman/8.4/en/optimizing-innodb-bulk-data-loading.html, as the tables we use in our MySQL database are of InnoDB type (we use InnoDB because it is ACID compliant).
