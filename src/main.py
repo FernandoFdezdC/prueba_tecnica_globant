@@ -20,5 +20,7 @@ def health():
 # Routers
 
 from routers import db_migration
+from routers import metrics
 
 app.include_router(db_migration.router)
+app.include_router(metrics.router)
