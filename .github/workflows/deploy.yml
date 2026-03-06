@@ -1,0 +1,52 @@
+name: CI/CD Deploy FastAPI to VPS
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+
+  # =====================================================
+  # 1. TESTING JOB
+  # =====================================================
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Verify Docker
+      - name: Verify Docker
+        run: docker --version
+
+      # Build image
+      - name: Build Docker image
+        run: |
+          docker compose -f docker-compose.yml build --no-cache
+
+      # Start container in background
+      - name: Start containers
+        run: |
+          docker compose -f docker-compose.yml up -d
+
+      # Wait for container to start
+      - name: Wait for container
+        run: sleep 10
+
+      # # See active containers (useful debug)
+      # - name: Get containers status
+      #   run: |
+      #     docker ps -a
+
+      # Execute tests inside the container
+      - name: Run tests inside docker
+        run: |
+          docker exec -e PYTHONPATH=/code prueba_tecnica_globant-dev-1 pytest /code/tests -v
+
+      # Final cleanup
+      - name: Shutdown containers
+        if: always()
+        run: |
+          docker compose -f docker-compose.yml down -v

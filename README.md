@@ -408,3 +408,16 @@ curl -X GET http://localhost:8000/metrics/departments-above-mean -H "accept: app
 ## Code explanation
 
 We do bulk data loading using the details given in https://dev.mysql.com/doc/refman/8.4/en/optimizing-innodb-bulk-data-loading.html, as the tables we use in our MySQL database are of InnoDB type (we use InnoDB because it is ACID compliant).
+
+## Testing
+
+To perform local testing with Docker (`docker-compose up` must have been executed):
+
+```bash
+docker exec -e PYTHONPATH=/code -it prueba_tecnica_globant-dev-1 pytest /code/tests -v
+```
+
+In general it will be:
+```bash
+docker exec -e PYTHONPATH=/code -it <container_name> pytest /code/tests -v
+```
