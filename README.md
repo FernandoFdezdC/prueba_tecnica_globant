@@ -421,3 +421,21 @@ In general it will be:
 ```bash
 docker exec -e PYTHONPATH=/code -it <container_name> pytest /code/tests -v
 ```
+
+## Terraform module
+
+The terraform module uses terraform to deploy infrastructure in Azure, it first deploys a resource group (in Azure everything must belong to a resource group), then a virtual network and then a subnet, in which 2 virtual machines are deployed. The first virtual machine runs the necessary database used for this project, while the second virtual machine runs the app. The module that provisions infrastructure for the database is found in `terraform/database/*` while the module that proved infrastructure for the app deployment is found in `terraform/application/*`. A diagram of the infrastructure is:
+
+![alt text](infrastructure-diagram.png)
+
+Note that the `terraform/azure_blob_storage_terraform_state_creation.sh` contains the necessary commands to initiate the terraform state and store it in Azure Blob Storage, so that it can be accessed and locked collaboratively (it cannot be stored in GitHub nor in the individual repository if there are more than 2 people working on the project at the same time).
+
+On the other hand, `terraform/create_key_pair.sh` contains the a command that creates a key pair necessary for being able to access the virtual machines that the infrastructure defines and stores the key pair in `~/` (default user folder in Linux).
+
+On file `setup_cloud.sh` instructions to download both terraform and `Azure CLI` can be found, as well as useful commands. Also, commands to use infracost, which is a tool that estimates the cost of the resources to be deployed by terraform, can be found.
+
+Note that the database should be deployed in general using a more robust and scalable solution, like `Azure Database for MySQL flexible servers`, but the free tier does not include that, so we use virtual machines so that it the solution is free, and also it is more instructional to deploy a SQL server and configure it from scratch. Note that, in general, the database should be deployed privately and the interface between the database and the virtual machines that run the app should be set accordingly.
+
+Note also that the `terraform/terraform.tfvars` file contains the SQL password. While this is acceptable for this simple project template and does not impact production deployment, in a real production environment, passwords should always be stored securely using a secrets management solution. Nevertheless, whenever this SQL password is also used in the project, it is marked as sensitive so that terraform does not output it in any log files.
+
+Finally, the app should be deployed in the IP created by terraform and shown in the `app_url` output.

@@ -1,0 +1,6 @@
+CREATE USER IF NOT EXISTS 'root'@'%' IDENTIFIED BY '${var.mysql_password}';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+DROP USER 'root'@'localhost';
+FLUSH PRIVILEGES;

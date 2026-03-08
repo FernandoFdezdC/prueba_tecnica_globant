@@ -15,3 +15,10 @@ liveenv
 *.env.local
 *.env.demo
 *.log
+
+# terraform
+terraform.tfstate
+terraform.tfstate*
+.terraform*
+.infracost
+.tflint.hcl
